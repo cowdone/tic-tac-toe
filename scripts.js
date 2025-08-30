@@ -1,7 +1,7 @@
 const Gameboard = (function(){
   const rows = 3;
   const columns = 3;
-  const board = [];
+  let board = [];
 
   for(let i=0;i<rows;i++) {
     board[i] = [];
@@ -11,6 +11,17 @@ const Gameboard = (function(){
   }
 
   const getBoard = () => board;
+  const restartGame = () => {
+    const newBoard = [];
+
+    for(let i=0;i<rows;i++) {
+    newBoard[i] = [];
+    for (let j = 0; j < columns; j++) {
+      newBoard[i].push(Cell());
+    }
+  }
+  board = newBoard;
+  }
 
   const checkWin = () => {
     for(let i=0;i<3;i++) {
@@ -58,7 +69,7 @@ const Gameboard = (function(){
       console.log("Out of bounds. (the first index is 0 for rows and columns)")
       return "Invalid";
     }
-    if(board[row][column].getValue() == "x" || board[row][column].getValue() == "o") {
+    if(board[row][column].getValue() == "X" || board[row][column].getValue() == "O") {
       console.log("Space already filled.") 
       return "Invalid";
     }
@@ -72,7 +83,8 @@ const Gameboard = (function(){
   }
   return {
     makePlay,
-    getBoard
+    getBoard,
+    restartGame
   }
 })();
 
@@ -104,7 +116,18 @@ const gameController = (function(){
     }
   ]
 
+  const playerOneInput = document.querySelector("#player-one-input")
+  const playerTwoInput = document.querySelector("#player-two-input")
+  const submitNamesBtn = document.querySelector(".submit-names-btn")
+  const playerTurnDiv = document.querySelector(".turn")
+  submitNamesBtn.addEventListener("click", () => {
+    players[0].name = playerOneInput.value;
+    players[1].name = playerTwoInput.value;
+    playerTurnDiv.textContent = `${activePlayer.name}'s turn...`
+  })
+
   let activePlayer = players[0]
+
   const switchPlayersTurn = () => {
     activePlayer = activePlayer === players[0] ? players[1] : players[0]}
   
@@ -114,30 +137,60 @@ const gameController = (function(){
     console.log(game.getBoard())
     console.log(`${getActivePlayer().name}'s turn.`)
   }
-  let gameOver = false;
 
-  const playRound = (row,column) => {
+  let gameOver = false;
+  let message;
+  let domMessage;
+  const messageContainer = document.querySelector(".result-msg-container")
+  const playRound = (row,column) => { 
+    if (domMessage) {
+      if(domMessage.textContent === "It's a draw!" || domMessage.textContent === `${getActivePlayer().name} wins!`) {
+        return;
+      }
+      domMessage.remove();
+    }
     if(gameOver) {
-      console.log("The game is over, reload the page to play again!")
       return;
     }
     const result = game.makePlay(row,column,getActivePlayer().token);
     if(result === "Invalid") {
+      message = "Space already filled."
+      domMessage = document.createElement("h1")
+      domMessage.textContent = message
+      messageContainer.appendChild(domMessage)
       return;
     }
     if(result === "Draw") {
-      console.log("It's a draw!")
+      message = "It's a draw!";
+      domMessage = document.createElement("h1")
+      domMessage.textContent = message;
+      messageContainer.appendChild(domMessage)
       gameOver = true;
       return;
     }
     if(result) {
-      console.log(`${getActivePlayer().name} wins!`)
+      message = `${getActivePlayer().name} wins!`;
+      domMessage = document.createElement("h1")
+      domMessage.textContent = message;
+      messageContainer.appendChild(domMessage)
       gameOver = true;
       return;
     }
     switchPlayersTurn();
     printNewRound();
   }
+  const container = document.querySelector(".restart-btn-container")
+      const newGame = document.createElement("button")
+      newGame.classList.add("restart-btn")
+      newGame.textContent = "Restart Game"
+      container.appendChild(newGame)
+      newGame.addEventListener("click", () => {
+        game.restartGame();
+        activePlayer = players[0];
+        gameOver = false;
+        domMessage.textContent = "";
+        domMessage.remove();
+      })
 
   printNewRound();
 
@@ -166,10 +219,14 @@ const screenController = function(){
         boardButton.dataset.row = rowIndex;
         boardButton.dataset.column = index;
         boardButton.textContent = `${cell.getValue()}`
+        boardButton.classList.add("board-btn")
         boardDiv.appendChild(boardButton);
       })
     })
   }
+  const restartBtn = document.querySelector(".restart-btn")
+  restartBtn.addEventListener("click", () => updateScreen())
+
   function clickHandlerBoard(e) {
       const selectedRow = e.target.dataset.row;
       const selectedColumn = e.target.dataset.column;
