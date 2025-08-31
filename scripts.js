@@ -66,11 +66,9 @@ const Gameboard = (function(){
 
   const makePlay = (row,column,player) => {
     if(row > 3 || column > 3 || row < 0 || column < 0) {
-      console.log("Out of bounds. (the first index is 0 for rows and columns)")
       return "Invalid";
     }
     if(board[row][column].getValue() == "X" || board[row][column].getValue() == "O") {
-      console.log("Space already filled.") 
       return "Invalid";
     }
       board[row][column].addToken(player)
@@ -132,11 +130,6 @@ const gameController = (function(){
     activePlayer = activePlayer === players[0] ? players[1] : players[0]}
   
   const getActivePlayer = () => activePlayer;
-  
-  const printNewRound = () => {
-    console.log(game.getBoard())
-    console.log(`${getActivePlayer().name}'s turn.`)
-  }
 
   let gameOver = false;
   let message;
@@ -177,7 +170,6 @@ const gameController = (function(){
       return;
     }
     switchPlayersTurn();
-    printNewRound();
   }
   const container = document.querySelector(".restart-btn-container")
       const newGame = document.createElement("button")
@@ -191,8 +183,6 @@ const gameController = (function(){
         domMessage.textContent = "";
         domMessage.remove();
       })
-
-  printNewRound();
 
   return {
     playRound,
